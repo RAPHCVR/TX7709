@@ -1,0 +1,116 @@
+replicaCount: 1
+
+image:
+  repository: registry.digitalocean.com/team-container/lightrag
+  pullPolicy: IfNotPresent
+  tag: "dev"
+
+imagePullSecrets:
+  - name: doc-registry-creds
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {fsGroup: 1001}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 9621
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/issuer: "dns-cloudflare"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  hosts:
+    - host: lightrag-utc2.raphcvr.me
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: lightrag-utc2-tls
+      hosts:
+        - lightrag-utc2.raphcvr.me
+
+resources: {}
+
+lightragConfig:
+  HOST: "0.0.0.0"
+  PORT: "9621"
+  WORKERS: "2"
+  WEBUI_TITLE: "Graph RAG Engine"
+  WEBUI_DESCRIPTION: "Simple and Fast Graph Based RAG System"
+  OLLAMA_EMULATING_MODEL_TAG: "utc-qwq"
+  SUMMARY_LANGUAGE: "French"
+  TEMPERATURE: "0"
+  TIMEOUT: "None"
+  MAX_ASYNC: "2"
+  MAX_TOKENS: "30000"
+  ENABLE_LLM_CACHE: "true"
+  ENABLE_LLM_CACHE_FOR_EXTRACT: "true"
+  LLM_BINDING: "ollama"
+  LLM_MODEL: "qwq:32b"
+  LLM_BINDING_HOST: "https://ia.beta.utc.fr/ollama"
+  EMBEDDING_BINDING_HOST: "https://api.openai.com/v1"
+  EMBEDDING_MODEL: "text-embedding-3-small"
+  EMBEDDING_DIM: "1536"
+  EMBEDDING_BINDING: "openai"
+  LIGHTRAG_KV_STORAGE: "PGKVStorage"
+  LIGHTRAG_VECTOR_STORAGE: "PGVectorStorage"
+  LIGHTRAG_GRAPH_STORAGE: "PGGraphStorage"
+  LIGHTRAG_DOC_STATUS_STORAGE: "PGDocStatusStorage"
+  DOCUMENT_LOADING_ENGINE: "DOCLING"
+
+lightragSecrets:
+  LLM_BINDING_API_KEY: ""
+  EMBEDDING_BINDING_API_KEY: ""
+  POSTGRES_PASSWORD: ""
+  TOKEN_SECRET: "nuMMzoK_TaIuGaHNtxDERkyBTl1NhrcwECduorKtzQg"
+  LIGHTRAG_API_KEY: "LR-MySecureStandaloneApiKey-789ABC!"
+  AUTH_ACCOUNTS: "admin:password"
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+postgresql:
+  enabled: true
+  image:
+    repository: registry.digitalocean.com/team-container/postgres-age-vector
+    tag: pg16-v0.8.0
+    pullPolicy: IfNotPresent
+  auth:
+    username: "lightrag_user"
+    password: ""
+    database: "lightrag_db3"
+    existingSecret: "lightrag-postgres-secret"
+    secretKeys:
+      passwordKey: "POSTGRES_PASSWORD"
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

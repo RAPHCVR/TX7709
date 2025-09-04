@@ -1,0 +1,21 @@
+{{/* templates/service-postgres.yaml */}}
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lightrag.fullname" . }}-postgresql
+  labels:
+    {{- include "lightrag.labels" . | nindent 4 }}
+    # Add the component label for clarity and potentially advanced selectors
+    app.kubernetes.io/component: postgresql
+spec:
+  type: ClusterIP # Only needs to be reachable within the cluster
+  ports:
+    - port: {{ .Values.postgresql.service.port }} # Exposes the port defined in values (default 5432)
+      targetPort: postgresql # Matches the name of the port in the postgresql deployment container spec
+      protocol: TCP
+      name: postgresql
+  selector:
+    # Selects the pods managed by the postgresql deployment
+    {{- include "lightrag.postgresql.selectorLabels" . | nindent 4 }}
+{{- end }}

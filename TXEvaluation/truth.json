@@ -1,0 +1,81 @@
+{
+  "J'ai un problème de mdp": [
+    "Les caractères spéciaux ne sont pas acceptés dans les mots de passe.",
+    "Le mot de passe doit contenir au moins 8 caractères."
+  ],
+  "Je ne sais pas à quel réseau me connecter": [
+    "Il faut se connecter à eduroam.",
+    "Le réseau cacahuète est également disponible pour les invités."
+  ],
+  "Comment faire pour que mon poste téléphonique soit transféré vers un autre numéro ? Je suis sur le poste 4242 et je souhaite le transférer vers le poste 1337.": [
+    "Pour transférer les appels, composez le 82 sur votre poste téléphonique.",
+    "Ensuite, composez le numéro du poste destinataire du transfert (par exemple, « 82 1337 » si vous transférez vers le 1337)."
+  ],
+  "Je suis sur le poste téléphonique 4242, les personnes arrivent à me joindre depuis des postes UTC, mais pas depuis l’extérieur, comment résoudre le problème ?": [
+    "Le poste téléphonique 4242 n'est pas une ligne directe et ne fonctionne qu'en interne à l’UTC.",
+    "Pour recevoir des appels de l'extérieur sur ce type de poste, il faut faire une demande à la DSI pour une ligne directe.",
+    "Votre demande de ligne directe doit préciser si vous avez le soutien de votre responsable.",
+    "Il faut également mentionner les circonstances qui appuient votre demande de ligne directe."
+  ],
+  "Je suis sur le poste téléphonique 4532, j’arrive à joindre les autres personnes avec des numéros de postes extérieurs, mais pas les personnes hors UTC (numéro de portable par exemple)": [
+    "Le poste 4532 est une ligne directe qui devrait permettre les appels vers l’extérieur.",
+    "Pour appeler un numéro extérieur, assurez-vous d'ajouter le préfixe « 0 » avant de composer le numéro de votre correspondant."
+  ],
+  "A chaque fois que j’essai d’ouvrir une page web, j’ai « erreur SSL »": [
+    "Une erreur SSL persistante peut être due à une date ou une heure incorrecte sur votre PC ; vérifiez ces paramètres."
+  ],
+  "Comment configurer mes mails avec thunderbird ?": [
+    "Pour la réception des mails (IMAP), le serveur est imaps.utc.fr.",
+    "Les paramètres de sécurisation pour la réception (IMAP) sont : SSL (Port 993).",
+    "Pour l'envoi des mails (SMTP), le serveur est smtps.utc.fr.",
+    "Les paramètres de sécurisation pour l'envoi (SMTP) sont : SSL (Port 465).",
+    "L'authentification doit être activée pour le serveur d'envoi (SMTP), en utilisant votre login et mot de passe de messagerie."
+  ],
+  "Je n’arrive pas à me connecter à eduroam, mais ca marche pour les autres réseaux.": [
+    "Pour se connecter à eduroam, l'identifiant doit être au format 'votrelgin@utc.fr' (ceci est valable aussi pour les étudiants).",
+    "Si vous avez récemment changé votre mot de passe UTC, il est conseillé d''oublier le réseau' eduroam sur votre appareil pour pouvoir saisir le nouveau mot de passe."
+  ],
+  "J’arrive à me connecter à internet et à l’ENT, mais je n’ai pas accès aux partages NAS et aux imprimantes.": [
+    "L'accès aux partages NAS et aux imprimantes est disponible si votre machine est connectée au réseau sécurisé.",
+    "Le réseau sécurisé est réservé aux machines professionnelles qui ont été configurées par la DSI.",
+    "Les logiciels de sécurité Cortex et OCS inventory doivent être installés et fonctionnels sur la machine pour accéder à ces services."
+  ],
+  "Je n’arrive pas à me connecter au VPN AnyConnect": [
+    "Le VPN AnyConnect n’est plus supporté.",
+    "En remplacement, et en fonction de votre situation, vous devez utiliser OpenVPN ou GlobalProtect."
+  ],
+  "Je n’arrive pas à me connecter au VPN OpenVPN": [
+    "Si vous avez installé OpenVPN avant Mars 2025, il est nécessaire de réinstaller le fichier de configuration ou l'outil complet pour mettre à jour votre configuration.",
+    "Le lien pour obtenir la configuration à jour d'OpenVPN est : https://5000.utc.fr/front/knowbaseitem.form.php?id=81.",
+    "Vérifiez l'exactitude de votre login et de votre mot de passe.",
+    "Si vous avez changé votre mot de passe UTC récemment, assurez-vous de le saisir à nouveau pour la connexion OpenVPN."
+  ],
+  "Je n’arrive pas à me connecter au NAS quand j’utilise OpenVPN": [
+    "Lorsque vous utilisez OpenVPN, vous pouvez uniquement accéder aux services des réseaux non sécurisés.",
+    "Pour accéder aux services sécurisés (comme le NAS ou les imprimantes) via VPN, vous devez utiliser GlobalProtect.",
+    "L'utilisation de GlobalProtect pour les services sécurisés requiert une machine professionnelle.",
+    "Les outils de sécurité (OCS inventory, Cortex) doivent également être actifs sur cette machine professionnelle."
+  ],
+  "Je n’arrive pas à me connecter au NAS quand j’utilise GlobalProtect": [
+    "Si vous utilisez GlobalProtect, vérifiez que vous vous connectez depuis un ordinateur professionnel.",
+    "Assurez-vous que les outils de sécurité (OCS inventory, Cortex) sont installés sur cet ordinateur.",
+    "Vérifiez que ces logiciels de sécurité sont bien lancés et fonctionnent correctement (vous pouvez double-cliquer sur l'icône Cortex dans la barre des tâches pour obtenir des informations).",
+    "Si ces logiciels ne sont pas lancés, vos accès seront équivalents à ceux d'un utilisateur sur un réseau non sécurisé."
+  ],
+  "Comment faire pour ouvrir une demande d’assistance": [
+    "Vous pouvez ouvrir une demande d'assistance en allant sur le site https://5000.utc.fr.",
+    "En cas de force majeure (par exemple, si votre compte est bloqué ou que la connexion à votre compte ne fonctionne pas), vous pouvez envoyer un mail à 5000-contact@utc.fr.",
+    "En cas de panne généralisée, il est possible que les équipes techniques soient difficiles à joindre car mobilisées à la résolution des incidents."
+  ],
+  "Je souhaite me connecter à distance sur une machine avec les logiciels UTC pour faire un TP, comment puis-je faire ?": [
+    "La liste des machines virtuelles disponibles pour une connexion à distance est publiée sur le site web https://freeremotepc.utc.fr/.",
+    "Sur ce site, dans la colonne de gauche, vous pouvez filtrer cette liste par type d'image logicielle (SME, CAO, GSU, Linux, etc.)."
+  ],
+  "Je viens de changer mon mot de passe et le wifi de mon PC portable ne marche plus.": [
+    "Si le Wi-Fi de votre PC portable ne fonctionne plus après un changement de mot de passe, il faut supprimer l'ancienne configuration du réseau : dans la liste des réseaux Wi-Fi disponibles, faites un clic droit sur le nom du réseau concerné, puis sélectionnez l'option 'oublier le réseau'."
+  ],
+  "Je suis extérieur et on m’a donné un login temporaire d’une semaine. Sur quelle réseau je dois me connecter ?": [
+    "Si vous êtes un utilisateur extérieur avec un login temporaire, vous devez probablement vous connecter sur le réseau 'portailutc', qui est utilisé par les invités.",
+    "Une feuille imprimée avec les informations de connexion vous a probablement été remise par l'accueil de l'UTC."
+  ]
+}

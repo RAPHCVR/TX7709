@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lightrag.fullname" . }}-config
+  labels:
+    {{- include "lightrag.labels" . | nindent 4 }}
+data:
+  HOST: {{ .Values.lightragConfig.HOST | quote }}
+  PORT: {{ .Values.lightragConfig.PORT | quote }}
+  WORKERS: {{ .Values.lightragConfig.WORKERS | quote }}
+  WEBUI_TITLE: {{ .Values.lightragConfig.WEBUI_TITLE | quote }}
+  WEBUI_DESCRIPTION: {{ .Values.lightragConfig.WEBUI_DESCRIPTION | quote }}
+  OLLAMA_EMULATING_MODEL_TAG: {{ .Values.lightragConfig.OLLAMA_EMULATING_MODEL_TAG | quote }}
+  INPUT_DIR: "/app/data/inputs"
+  WORKING_DIR: "/app/data/rag_storage"
+
+  SUMMARY_LANGUAGE: {{ .Values.lightragConfig.SUMMARY_LANGUAGE | quote }}
+  TIMEOUT: {{ .Values.lightragConfig.TIMEOUT | quote }}
+  TEMPERATURE: {{ .Values.lightragConfig.TEMPERATURE | quote }}
+  MAX_ASYNC: {{ .Values.lightragConfig.MAX_ASYNC | quote }}
+  MAX_TOKENS: {{ .Values.lightragConfig.MAX_TOKENS | quote }}
+  ENABLE_LLM_CACHE: {{ .Values.lightragConfig.ENABLE_LLM_CACHE | quote }}
+  ENABLE_LLM_CACHE_FOR_EXTRACT: {{ .Values.lightragConfig.ENABLE_LLM_CACHE_FOR_EXTRACT | quote }}
+
+  LLM_BINDING: {{ .Values.lightragConfig.LLM_BINDING | quote }}
+  LLM_MODEL: {{ .Values.lightragConfig.LLM_MODEL | quote }}
+  LLM_BINDING_HOST: {{ .Values.lightragConfig.LLM_BINDING_HOST | quote }}
+
+  EMBEDDING_MODEL: {{ .Values.lightragConfig.EMBEDDING_MODEL | quote }}
+  EMBEDDING_DIM: {{ .Values.lightragConfig.EMBEDDING_DIM | quote }}
+  EMBEDDING_BINDING: {{ .Values.lightragConfig.EMBEDDING_BINDING | quote }}
+  {{- if .Values.lightragConfig.EMBEDDING_BINDING_HOST }}
+  EMBEDDING_BINDING_HOST: {{ .Values.lightragConfig.EMBEDDING_BINDING_HOST | quote }}
+  {{- end }}
+
+  LIGHTRAG_KV_STORAGE: {{ .Values.lightragConfig.LIGHTRAG_KV_STORAGE | quote }}
+  LIGHTRAG_VECTOR_STORAGE: {{ .Values.lightragConfig.LIGHTRAG_VECTOR_STORAGE | quote }}
+  LIGHTRAG_GRAPH_STORAGE: {{ .Values.lightragConfig.LIGHTRAG_GRAPH_STORAGE | quote }}
+  LIGHTRAG_DOC_STATUS_STORAGE: {{ .Values.lightragConfig.LIGHTRAG_DOC_STATUS_STORAGE | quote }}
+
+  {{- if .Values.postgresql.enabled }}
+  POSTGRES_HOST: {{ include "lightrag.fullname" . }}-postgresql
+  POSTGRES_PORT: {{ .Values.postgresql.service.port | quote }}
+  POSTGRES_USER: {{ .Values.postgresql.auth.username | quote }}
+  POSTGRES_DATABASE: {{ .Values.postgresql.auth.database | quote }}
+  {{- else }}
+  POSTGRES_HOST: {{ .Values.lightragConfig.POSTGRES_HOST | default "" | quote }}
+  POSTGRES_PORT: {{ .Values.lightragConfig.POSTGRES_PORT | default "" | quote }}
+  POSTGRES_USER: {{ .Values.lightragConfig.POSTGRES_USER | default "" | quote }}
+  POSTGRES_DATABASE: {{ .Values.lightragConfig.POSTGRES_DATABASE | default "" | quote }}
+  {{- end }}
+
+  NEO4J_URI: {{ .Values.lightragConfig.NEO4J_URI | default "" | quote }}
+  NEO4J_USERNAME: {{ .Values.lightragConfig.NEO4J_USERNAME | default "" | quote }}
+
+  {{- if .Values.lightragConfig.TOKEN_EXPIRE_HOURS }}
+  TOKEN_EXPIRE_HOURS: {{ .Values.lightragConfig.TOKEN_EXPIRE_HOURS | quote }}
+  {{- end }}
+
+  {{- if .Values.lightragConfig.WHITELIST_PATHS }}
+  WHITELIST_PATHS: {{ .Values.lightragConfig.WHITELIST_PATHS | quote }}
+  {{- end }}
+
+  {{- if .Values.lightragConfig.DOCUMENT_LOADING_ENGINE }}
+  DOCUMENT_LOADING_ENGINE: {{ .Values.lightragConfig.DOCUMENT_LOADING_ENGINE | quote }}
+  {{- end }}

@@ -1,0 +1,25 @@
+{{/* templates/pvc-postgres.yaml */}}
+{{- if and .Values.postgresql.enabled .Values.postgresql.persistence.enabled (not .Values.postgresql.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lightrag.fullname" . }}-postgresql-data
+  labels:
+    {{- include "lightrag.labels" . | nindent 4 }}
+    # Add the component label
+    app.kubernetes.io/component: postgresql
+spec:
+  accessModes:
+    {{- toYaml .Values.postgresql.persistence.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.persistence.size | quote }}
+  {{- if .Values.postgresql.persistence.storageClass }}
+  {{- /* "" means use default storage class */}}
+  {{- if (eq "-" .Values.postgresql.persistence.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: {{ .Values.postgresql.persistence.storageClass | quote }}
+  {{- end }}
+  {{- end }}
+{{- end }}

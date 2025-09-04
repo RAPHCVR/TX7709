@@ -1,0 +1,316 @@
+# README
+# High level values structure, overview and explanation of the values.yaml file.
+# 1. Global and chart wide values, like the image repository, image tag, etc.
+# 2. Ingress, (default is nginx, but you can change it to your own ingress controller)
+# 3. Main n8n app configuration + kubernetes specific settings
+# 4. Worker related settings + kubernetes specific settings
+# 5. Webhook related settings + kubernetes specific settings
+# 6. Raw Resources to pass through your own manifests like GatewayAPI, ServiceMonitor etc.
+# 7. Valkey/Redis related settings and kubernetes specific settings
+
+# --- Anchors for shared configuration ---
+_shared_config:
+  hostname: &hostname n8n.raphcvr.me # Votre nom d'hôte
+  url: &url https://n8n.raphcvr.me # Votre URL basée sur le nom d'hôte
+
+# --- Global common config ---
+image:
+  repository: n8nio/n8n # Votre repository
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "" # Utilise la version du chart par défaut, ou spécifiez une version ici
+imagePullSecrets: []
+# The Name to use for the chart. Will be the prefix of all resources aka. The Chart.Name (default is 'n8n')
+nameOverride:
+# Override the full name of the deployment. When empty, the name will be "{release-name}-{chart-name}" or the value of nameOverride if specified
+fullnameOverride:
+# Add entries to a pod's /etc/hosts file, mapping custom IP addresses to hostnames.
+hostAliases: []
+  # - ip: 8.8.8.8
+#   hostnames:
+#     - service-example.local
+
+# --- Ingress ---
+ingress:
+  enabled: true
+  # Combinaison des annotations utiles des deux fichiers
+  annotations:
+    cert-manager.io/issuer: "dns-cloudflare" # Votre issuer cert-manager
+    nginx.ingress.kubernetes.io/proxy-body-size: "0" # Augmenté
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3000" # Augmenté
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3000" # Augmenté
+    nginx.ingress.kubernetes.io/proxy-buffering: "off" # Désactivé pour SSE
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off" # Désactivé pour SSE
+    nginx.ingress.kubernetes.io/ssl-redirect: "true" # Forcer HTTPS (bonne pratique)
+  className: "nginx" # Votre classe ingress
+  hosts:
+    - host: *hostname # Utilisation de l'ancre pour le nom d'hôte
+      paths:
+          - /
+  tls:
+    - hosts:
+        - *hostname # Utilisation de l'ancre pour le nom d'hôte
+      secretName: n8n-domain-cert # Votre nom de secret TLS
+
+# --- Main n8n application ---
+main:
+  # Configuration via variables d'environnement
+  config:
+    n8n:
+      # IMPORTANT: Définir l'URL de base pour l'éditeur
+      editor_base_url: *url # Utilisation de l'ancre pour l'URL
+    # IMPORTANT: Utiliser le mode queue pour le scaling avec workers/webhooks
+    executions_mode: queue
+    # IMPORTANT: URL publique pour les webhooks (souvent la même que l'URL principale)
+    webhook_url: *url # Utilisation de l'ancre pour l'URL
+    # Configuration pour la file d'attente (pointe vers Valkey)
+    queue:
+      health:
+        check:
+          active: true # Activer le health check de la queue (recommandé)
+      bull:
+        redis:
+          # IMPORTANT: Assurez-vous que cela correspond au nom du service Valkey
+          # Par défaut: {{ .Release.Name }}-valkey-primary
+          host: "n8n-valkey-primary"
+          port: 6379
+    # --- PAS DE CONFIGURATION DB EXTERNE ICI ---
+    # n8n utilisera SQLite par défaut dans le volume du pod (/home/node/.n8n)
+    # db:
+    #   type: postgresdb
+    #   postgresdb:
+    #     host: ...
+
+  # Secrets (comme la clé de chiffrement)
+  secret:
+    n8n:
+      # IMPORTANT: Remplacez ceci par une clé de chiffrement forte et unique!
+      # Générez-en une avec: openssl rand -base64 32
+      encryption_key: "CHANGEME_my_very_secret_strong_encryption_key"
+
+  # Pas besoin de extraEnv, extraVolumeMounts, extraVolumes car pas de DB externe
+  extraEnv: {}
+  extraVolumeMounts: []
+  extraVolumes: []
+
+  # --- Kubernetes Specific Settings for Main ---
+  persistence:
+    enabled: true
+    # ATTENTION: emptyDir signifie que les données (workflows, credentials si SQLite)
+    # seront PERDUES si le pod redémarre.
+    # Pour une utilisation en production ou si vous utilisez SQLite (défaut sans DB externe),
+    # changez pour 'dynamic' (besoin d'un StorageClass par défaut ou spécifié)
+    # ou 'existing' (besoin de créer un PVC manuellement).
+    type: dynamic
+    # storageClass: "-" # Décommentez si vous utilisez 'dynamic' et ne voulez pas le SC par défaut
+    # storageClass: "your-storage-class-name" # Ou spécifiez votre StorageClass
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi # Ajustez si vous passez en persistance réelle
+    # existingClaim: my-n8n-main-pvc # Si type: existing
+  replicaCount: 1
+  deploymentStrategy:
+    type: "Recreate" # Gardé de votre config, RollingUpdate est aussi possible
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  securityContext: {}
+  lifecycle: {}
+  command: []
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  initContainers: []
+  service:
+    annotations: {}
+    type: ClusterIP
+    port: 80
+  # Ressources recommandées (ajuster selon vos besoins)
+  resources:
+    limits:
+      memory: 2048Mi
+    requests:
+      cpu: "100m" # Ajout d'une request CPU minimale
+      memory: 512Mi
+  autoscaling:
+    enabled: false
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# --- Worker Settings ---
+# Activé car executions_mode: queue
+worker:
+  enabled: true
+  # Config spécifique au worker si nécessaire (hérite de main)
+  config: {}
+  # Secret spécifique au worker si nécessaire (hérite de main)
+  secret: {}
+  # Pas besoin de extraEnv, extraVolumeMounts, extraVolumes car pas de DB externe
+  extraEnv: {}
+  extraVolumeMounts: []
+  extraVolumes: []
+  count: 2 # Nombre de process worker DANS chaque pod worker
+  concurrency: 10 # Nombre de jobs parallèles PAR process worker
+  # --- Kubernetes Specific Settings for Worker ---
+  persistence:
+    enabled: true
+    type: emptyDir # Les workers sont stateless, emptyDir est généralement ok
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+  replicaCount: 1 # Nombre de pods worker. Augmentez pour plus de capacité.
+  deploymentStrategy:
+    type: "Recreate"
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  securityContext: {}
+  lifecycle: {}
+  command: [] # Par défaut démarre en mode worker
+  commandArgs: []
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  initContainers: []
+  service: # Pas de service exposé nécessaire pour les workers par défaut
+    enabled: false # Désactivé explicitement
+    # annotations: {}
+    # type: ClusterIP
+    # port: 80
+  resources: {} # Ajoutez des ressources si nécessaire
+  # limits:
+  #   cpu: 500m
+  #   memory: 1024Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 256Mi
+  autoscaling:
+    enabled: false
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# --- Webhook Settings ---
+# Activé car executions_mode: queue
+webhook:
+  enabled: true
+  # Config spécifique au webhook si nécessaire (hérite de main)
+  config: {}
+  # Secret spécifique au webhook si nécessaire (hérite de main)
+  secret: {}
+  # Pas besoin de extraEnv, extraVolumeMounts, extraVolumes car pas de DB externe
+  extraEnv: {}
+  extraVolumeMounts: []
+  extraVolumes: []
+  # --- Kubernetes Specific Settings for Webhook ---
+  persistence:
+    enabled: true
+    type: emptyDir # Les webhooks sont stateless, emptyDir est généralement ok
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+  replicaCount: 1 # Nombre de pods webhook. Augmentez pour plus de capacité.
+  deploymentStrategy:
+    type: "Recreate"
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  securityContext: {}
+  lifecycle: {}
+  command: [] # Par défaut démarre en mode webhook-process
+  commandArgs: []
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  readinessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+  initContainers: []
+  service: # Le service webhook est interne, utilisé par l'ingress si nécessaire (rare)
+    annotations: {}
+    type: ClusterIP
+    port: 80
+  resources: {} # Ajoutez des ressources si nécessaire
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  autoscaling:
+    enabled: false
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# --- User defined supplementary K8s manifests ---
+# Vide car pas de DB externe ou autres ressources personnalisées
+extraManifests: []
+extraTemplateManifests: []
+
+# --- Bitnami Valkey configuration ---
+# Utilisation de la configuration explicite de l'exemple générique
+valkey:
+  enabled: true
+  architecture: standalone # Mode simple sans réplication/sentinel complexe
+  auth:
+    enabled: false # Pas d'authentification par défaut
+  replica: # Inclus dans standalone mais configuré ici pour clarté/héritage bitnami
+    replicaCount: 1
+  sentinel:
+    enabled: false # Désactivé car standalone
+  primary: # Options pour le pod Valkey principal
+    # kind: Deployment # Déjà par défaut dans le subchart
+    persistence:
+      enabled: false # Valkey est utilisé comme cache/queue, pas besoin de persistance ici
+    # Ressources pour Valkey (ajuster si besoin)
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      # limits: # Optionnel, ajoutez si nécessaire
+      #   memory: 512Mi
+      #   cpu: 200m

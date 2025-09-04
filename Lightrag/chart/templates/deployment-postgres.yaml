@@ -1,0 +1,85 @@
+{{/* Corrected templates/deployment-postgres.yaml */}}
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lightrag.fullname" . }}-postgresql
+  labels:
+    {{- include "lightrag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "lightrag.postgresql.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- include "lightrag.postgresql.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        fsGroup: 26 # GID of the postgres group, common default
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: postgresql
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
+          ports:
+            - name: postgresql
+              containerPort: {{ .Values.postgresql.service.port }}
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.auth.username | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.auth.database | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.auth.existingSecret | default (include "lightrag.secretName" .) }}
+                  key: {{ .Values.postgresql.auth.secretKeys.passwordKey }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            {{- if .Values.postgresql.persistence.enabled }}
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            {{- end }}
+          resources:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+          # Readiness probe checks if the server is ready to accept connections with the correct user
+          readinessProbe:
+            exec:
+              command: ["pg_isready",
+                        "-U", "$(POSTGRES_USER)", # Use the defined user
+                        "-d", "$(POSTGRES_DB)",   # Check the specific database
+                        "-h", "127.0.0.1",
+                        "-p", "{{ .Values.postgresql.service.port }}"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # --- START: Liveness Probe Fix ---
+          # Liveness probe now ALSO uses the defined user to avoid role errors
+          livenessProbe:
+            exec:
+              command: ["pg_isready",
+                        "-U", "$(POSTGRES_USER)", # Explicitly use the defined user
+                        "-d", "$(POSTGRES_DB)",   # Check the specific database
+                        "-h", "127.0.0.1",
+                        "-p", "{{ .Values.postgresql.service.port }}"]
+                        # No need to specify -d for basic liveness check
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5
+          # --- END: Liveness Probe Fix ---
+      volumes:
+        {{- if .Values.postgresql.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "lightrag.fullname" . }}-postgresql-data
+        {{- end }}
+{{- end }}
